@@ -1,0 +1,2347 @@
+{
+  "info": {
+    "name": "Blog API (auth + post services)",
+    "description": "All APIs of the blog project.\n\n**Quick start**\n1. Start both services (`npm run dev` in `auth/` and `post/`).\n2. Run **1. Auth \u2192 Signup**. The token is saved automatically.\n3. Try the requests in **2. Posts**.\n\n**Run everything:** right-click the collection \u2192 *Run collection*. Folders run in order.\n\n**How the token works:** protected requests use *Bearer Token* `{{token}}` from the collection's Authorization tab (they show \"Inherit auth from parent\"). Public requests are set to *No Auth*.\n\n**Variables** (collection \u2192 Variables tab): `authUrl`, `postUrl`, `password`, and `jwtSecret` (only for the expired-token test). Others are filled in by scripts.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "authUrl",
+      "value": "http://localhost:4000",
+      "description": "Auth service base URL"
+    },
+    {
+      "key": "postUrl",
+      "value": "http://localhost:5000",
+      "description": "Post service base URL"
+    },
+    {
+      "key": "password",
+      "value": "secret123",
+      "description": "Password used for test users"
+    },
+    {
+      "key": "jwtSecret",
+      "value": "paste-JWT_SECRET-from-.env-here",
+      "description": "Only for the expired-token test"
+    },
+    {
+      "key": "invalidToken",
+      "value": "this.is.not-a-valid-jwt"
+    },
+    {
+      "key": "email",
+      "value": "",
+      "description": "Set by Signup"
+    },
+    {
+      "key": "bobEmail",
+      "value": "",
+      "description": "Set by Setup: signup second user"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "description": "Set by Signup / Login"
+    },
+    {
+      "key": "bobToken",
+      "value": "",
+      "description": "Set by Setup: signup second user"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "description": "Set by Signup / Login"
+    },
+    {
+      "key": "postId",
+      "value": "",
+      "description": "Set by Create post"
+    },
+    {
+      "key": "expiredToken",
+      "value": "",
+      "description": "Built by the expired-token test"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "description": "Signup, login and profile. Auth service, port 4000.",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{authUrl}}/api/auth/signup",
+              "host": [
+                "{{authUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "signup"
+              ]
+            },
+            "description": "Create a new account. Returns the user (without the password) and an access token.\n\n**Rules:** `name` 2-50 chars \u00b7 `email` valid, unique \u00b7 `password` 8-72 bytes with a letter and a number.\n\nThe pre-request script makes a new random email each time so you can click Send repeatedly. The test script saves `token` and `userId`.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// New email every run, so signup never fails with 'already exists'",
+                  "pm.collectionVariables.set('email', `jane.${Date.now()}@example.com`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "// Save the token so every protected request can use it automatically",
+                  "const result = pm.response.json().data;",
+                  "pm.collectionVariables.set('token', result.accessToken);",
+                  "pm.collectionVariables.set('userId', result.user.id);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{authUrl}}/api/auth/signup",
+                  "host": [
+                    "{{authUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "signup"
+                  ]
+                },
+                "description": "Create a new account. Returns the user (without the password) and an access token.\n\n**Rules:** `name` 2-50 chars \u00b7 `email` valid, unique \u00b7 `password` 8-72 bytes with a letter and a number.\n\nThe pre-request script makes a new random email each time so you can click Send repeatedly. The test script saves `token` and `userId`.",
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"name\": \"Jane Doe\",\n      \"email\": \"jane@example.com\",\n      \"createdAt\": \"2026-10-15T08:42:44.657Z\",\n      \"updatedAt\": \"2026-10-15T08:42:44.657Z\",\n      \"id\": \"6ad092044e1f9e00b621033c\"\n    },\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YWQwOTIwNDRlMWY5ZTAwYjYyMTAzM2MifQ.signature\",\n    \"tokenType\": \"Bearer\",\n    \"expiresAt\": \"2026-10-15T08:57:44.000Z\"\n  }\n}"
+            },
+            {
+              "name": "409 Email already registered",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{authUrl}}/api/auth/signup",
+                  "host": [
+                    "{{authUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "signup"
+                  ]
+                },
+                "description": "Create a new account. Returns the user (without the password) and an access token.\n\n**Rules:** `name` 2-50 chars \u00b7 `email` valid, unique \u00b7 `password` 8-72 bytes with a letter and a number.\n\nThe pre-request script makes a new random email each time so you can click Send repeatedly. The test script saves `token` and `userId`.",
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"CONFLICT\",\n    \"message\": \"An account with this email already exists\"\n  }\n}"
+            },
+            {
+              "name": "400 Validation failed",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{authUrl}}/api/auth/signup",
+                  "host": [
+                    "{{authUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "signup"
+                  ]
+                },
+                "description": "Create a new account. Returns the user (without the password) and an access token.\n\n**Rules:** `name` 2-50 chars \u00b7 `email` valid, unique \u00b7 `password` 8-72 bytes with a letter and a number.\n\nThe pre-request script makes a new random email each time so you can click Send repeatedly. The test script saves `token` and `userId`.",
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"BAD_REQUEST\",\n    \"message\": \"Validation failed\",\n    \"details\": [\n      {\n        \"field\": \"name\",\n        \"message\": \"name must be 2-50 characters\"\n      },\n      {\n        \"field\": \"email\",\n        \"message\": \"email must be a valid email address\"\n      },\n      {\n        \"field\": \"password\",\n        \"message\": \"password must be at least 8 characters\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{authUrl}}/api/auth/login",
+              "host": [
+                "{{authUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Log in with email and password. Returns a new access token, which the test script saves in `token`.\n\nAfter 5 failed attempts (same IP + email) you get **429** for 15 minutes.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "// Save the token so every protected request can use it automatically",
+                  "const result = pm.response.json().data;",
+                  "pm.collectionVariables.set('token', result.accessToken);",
+                  "pm.collectionVariables.set('userId', result.user.id);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{authUrl}}/api/auth/login",
+                  "host": [
+                    "{{authUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Log in with email and password. Returns a new access token, which the test script saves in `token`.\n\nAfter 5 failed attempts (same IP + email) you get **429** for 15 minutes.",
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"name\": \"Jane Doe\",\n      \"email\": \"jane@example.com\",\n      \"createdAt\": \"2026-10-15T08:42:44.657Z\",\n      \"updatedAt\": \"2026-10-15T08:42:44.657Z\",\n      \"id\": \"6ad092044e1f9e00b621033c\"\n    },\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YWQwOTIwNDRlMWY5ZTAwYjYyMTAzM2MifQ.signature\",\n    \"tokenType\": \"Bearer\",\n    \"expiresAt\": \"2026-10-15T08:57:44.000Z\"\n  }\n}"
+            },
+            {
+              "name": "401 Wrong email or password",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{authUrl}}/api/auth/login",
+                  "host": [
+                    "{{authUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Log in with email and password. Returns a new access token, which the test script saves in `token`.\n\nAfter 5 failed attempts (same IP + email) you get **429** for 15 minutes.",
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_CREDENTIALS\",\n    \"message\": \"Invalid email or password\"\n  }\n}"
+            },
+            {
+              "name": "429 Too many attempts",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{authUrl}}/api/auth/login",
+                  "host": [
+                    "{{authUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Log in with email and password. Returns a new access token, which the test script saves in `token`.\n\nAfter 5 failed attempts (same IP + email) you get **429** for 15 minutes.",
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"TOO_MANY_ATTEMPTS\",\n    \"message\": \"Too many failed login attempts. Try again in 873 seconds\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get my profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{authUrl}}/api/auth/me",
+              "host": [
+                "{{authUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Returns the logged-in user. **Requires** `Authorization: Bearer <token>` (inherited from the collection)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{authUrl}}/api/auth/me",
+                  "host": [
+                    "{{authUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "me"
+                  ]
+                },
+                "description": "Returns the logged-in user. **Requires** `Authorization: Bearer <token>` (inherited from the collection)."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"name\": \"Jane Doe\",\n      \"email\": \"jane@example.com\",\n      \"createdAt\": \"2026-10-15T08:42:44.657Z\",\n      \"updatedAt\": \"2026-10-15T08:42:44.657Z\",\n      \"id\": \"6ad092044e1f9e00b621033c\"\n    }\n  }\n}"
+            },
+            {
+              "name": "401 Missing token",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{authUrl}}/api/auth/me",
+                  "host": [
+                    "{{authUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "me"
+                  ]
+                },
+                "description": "Returns the logged-in user. **Requires** `Authorization: Bearer <token>` (inherited from the collection)."
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"TOKEN_MISSING\",\n    \"message\": \"Missing or malformed Authorization header\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Health check (auth)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{authUrl}}/health",
+              "host": [
+                "{{authUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Shows whether the auth service can reach MongoDB and Redis. 503 if either is down.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{authUrl}}/health",
+                  "host": [
+                    "{{authUrl}}"
+                  ],
+                  "path": [
+                    "health"
+                  ]
+                },
+                "description": "Shows whether the auth service can reach MongoDB and Redis. 503 if either is down.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"service\": \"auth\",\n    \"mongo\": \"up\",\n    \"redis\": \"up\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Posts",
+      "description": "Create, read, update, delete posts. Post service, port 5000. Reading is public; writing needs a token.",
+      "item": [
+        {
+          "name": "Create post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{postUrl}}/api/posts",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ]
+            },
+            "description": "Create a post as the logged-in user. The author is taken **from the token**: an `author` field in the body is ignored.\n\n**Rules:** `title` 3-150 chars \u00b7 `content` 1-20000 chars. The test script saves `postId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"My first post\",\n  \"content\": \"Hello world!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('postId', pm.response.json().data.post.id);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{postUrl}}/api/posts",
+                  "host": [
+                    "{{postUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "posts"
+                  ]
+                },
+                "description": "Create a post as the logged-in user. The author is taken **from the token**: an `author` field in the body is ignored.\n\n**Rules:** `title` 3-150 chars \u00b7 `content` 1-20000 chars. The test script saves `postId`.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"My first post\",\n  \"content\": \"Hello world!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"post\": {\n      \"title\": \"My first post\",\n      \"content\": \"Hello world!\",\n      \"author\": {\n        \"id\": \"6ad092044e1f9e00b621033c\",\n        \"name\": \"Jane Doe\"\n      },\n      \"createdAt\": \"2026-10-15T08:42:44.962Z\",\n      \"updatedAt\": \"2026-10-15T08:42:44.962Z\",\n      \"id\": \"6ad092048ef5f8fb4ecd97f1\"\n    }\n  }\n}"
+            },
+            {
+              "name": "401 Not logged in",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{postUrl}}/api/posts",
+                  "host": [
+                    "{{postUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "posts"
+                  ]
+                },
+                "description": "Create a post as the logged-in user. The author is taken **from the token**: an `author` field in the body is ignored.\n\n**Rules:** `title` 3-150 chars \u00b7 `content` 1-20000 chars. The test script saves `postId`.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"My first post\",\n  \"content\": \"Hello world!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"TOKEN_MISSING\",\n    \"message\": \"Missing or malformed Authorization header\"\n  }\n}"
+            },
+            {
+              "name": "400 Validation failed",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{postUrl}}/api/posts",
+                  "host": [
+                    "{{postUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "posts"
+                  ]
+                },
+                "description": "Create a post as the logged-in user. The author is taken **from the token**: an `author` field in the body is ignored.\n\n**Rules:** `title` 3-150 chars \u00b7 `content` 1-20000 chars. The test script saves `postId`.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"My first post\",\n  \"content\": \"Hello world!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"BAD_REQUEST\",\n    \"message\": \"Validation failed\",\n    \"details\": [\n      {\n        \"field\": \"title\",\n        \"message\": \"title must be 3-150 characters\"\n      },\n      {\n        \"field\": \"content\",\n        \"message\": \"content is required\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List all posts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{postUrl}}/api/posts?page=1&limit=10",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "**Public**, no token needed. Newest first.\n\nQuery params: `page` (default 1) \u00b7 `limit` 1-100 (default 10) \u00b7 `author` (optional user id).",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{postUrl}}/api/posts?page=1&limit=10",
+                  "host": [
+                    "{{postUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "posts"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                },
+                "description": "**Public**, no token needed. Newest first.\n\nQuery params: `page` (default 1) \u00b7 `limit` 1-100 (default 10) \u00b7 `author` (optional user id).",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"posts\": [\n      {\n        \"title\": \"My first post\",\n        \"content\": \"Hello world!\",\n        \"author\": {\n          \"id\": \"6ad092044e1f9e00b621033c\",\n          \"name\": \"Jane Doe\"\n        },\n        \"createdAt\": \"2026-10-15T08:42:44.962Z\",\n        \"updatedAt\": \"2026-10-15T08:42:44.962Z\",\n        \"id\": \"6ad092048ef5f8fb4ecd97f1\"\n      }\n    ],\n    \"pagination\": {\n      \"page\": 1,\n      \"limit\": 10,\n      \"total\": 1,\n      \"totalPages\": 1\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List posts by author",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{postUrl}}/api/posts?author={{userId}}",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "author",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "**Public.** Same as *List all posts* but only one user's posts.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{postUrl}}/api/posts?author={{userId}}",
+                  "host": [
+                    "{{postUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "posts"
+                  ],
+                  "query": [
+                    {
+                      "key": "author",
+                      "value": "{{userId}}"
+                    }
+                  ]
+                },
+                "description": "**Public.** Same as *List all posts* but only one user's posts.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"posts\": [\n      {\n        \"title\": \"My first post\",\n        \"content\": \"Hello world!\",\n        \"author\": {\n          \"id\": \"6ad092044e1f9e00b621033c\",\n          \"name\": \"Jane Doe\"\n        },\n        \"createdAt\": \"2026-10-15T08:42:44.962Z\",\n        \"updatedAt\": \"2026-10-15T08:42:44.962Z\",\n        \"id\": \"6ad092048ef5f8fb4ecd97f1\"\n      }\n    ],\n    \"pagination\": {\n      \"page\": 1,\n      \"limit\": 10,\n      \"total\": 1,\n      \"totalPages\": 1\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get post by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{postUrl}}/api/posts/{{postId}}",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}"
+              ]
+            },
+            "description": "**Public.** Get one post.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{postUrl}}/api/posts/{{postId}}",
+                  "host": [
+                    "{{postUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "posts",
+                    "{{postId}}"
+                  ]
+                },
+                "description": "**Public.** Get one post.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"post\": {\n      \"title\": \"My first post\",\n      \"content\": \"Hello world!\",\n      \"author\": {\n        \"id\": \"6ad092044e1f9e00b621033c\",\n        \"name\": \"Jane Doe\"\n      },\n      \"createdAt\": \"2026-10-15T08:42:44.962Z\",\n      \"updatedAt\": \"2026-10-15T08:42:44.962Z\",\n      \"id\": \"6ad092048ef5f8fb4ecd97f1\"\n    }\n  }\n}"
+            },
+            {
+              "name": "404 Not found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{postUrl}}/api/posts/{{postId}}",
+                  "host": [
+                    "{{postUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "posts",
+                    "{{postId}}"
+                  ]
+                },
+                "description": "**Public.** Get one post.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"NOT_FOUND\",\n    \"message\": \"Post not found\"\n  }\n}"
+            },
+            {
+              "name": "400 Invalid id",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{postUrl}}/api/posts/{{postId}}",
+                  "host": [
+                    "{{postUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "posts",
+                    "{{postId}}"
+                  ]
+                },
+                "description": "**Public.** Get one post.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_ID\",\n    \"message\": \"Validation failed\",\n    \"details\": [\n      {\n        \"field\": \"id\",\n        \"message\": \"id must be a valid 24-character hex ObjectId\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update post",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{postUrl}}/api/posts/{{postId}}",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}"
+              ]
+            },
+            "description": "Change `title` and/or `content` (send at least one). **Only the owner** can update; anyone else gets 403.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"My first post (edited)\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{postUrl}}/api/posts/{{postId}}",
+                  "host": [
+                    "{{postUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "posts",
+                    "{{postId}}"
+                  ]
+                },
+                "description": "Change `title` and/or `content` (send at least one). **Only the owner** can update; anyone else gets 403.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"My first post (edited)\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"post\": {\n      \"title\": \"My first post (edited)\",\n      \"content\": \"Hello world!\",\n      \"author\": {\n        \"id\": \"6ad092044e1f9e00b621033c\",\n        \"name\": \"Jane Doe\"\n      },\n      \"createdAt\": \"2026-10-15T08:42:44.962Z\",\n      \"updatedAt\": \"2026-10-15T08:45:10.120Z\",\n      \"id\": \"6ad092048ef5f8fb4ecd97f1\"\n    }\n  }\n}"
+            },
+            {
+              "name": "403 Not your post",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{postUrl}}/api/posts/{{postId}}",
+                  "host": [
+                    "{{postUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "posts",
+                    "{{postId}}"
+                  ]
+                },
+                "description": "Change `title` and/or `content` (send at least one). **Only the owner** can update; anyone else gets 403.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"My first post (edited)\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"FORBIDDEN\",\n    \"message\": \"You can only modify your own posts\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete post",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{postUrl}}/api/posts/{{postId}}",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}"
+              ]
+            },
+            "description": "Delete a post. **Only the owner** can delete; anyone else gets 403."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{postUrl}}/api/posts/{{postId}}",
+                  "host": [
+                    "{{postUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "posts",
+                    "{{postId}}"
+                  ]
+                },
+                "description": "Delete a post. **Only the owner** can delete; anyone else gets 403."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Post deleted successfully\",\n    \"id\": \"6ad092048ef5f8fb4ecd97f1\"\n  }\n}"
+            },
+            {
+              "name": "403 Not your post",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{postUrl}}/api/posts/{{postId}}",
+                  "host": [
+                    "{{postUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "posts",
+                    "{{postId}}"
+                  ]
+                },
+                "description": "Delete a post. **Only the owner** can delete; anyone else gets 403."
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"FORBIDDEN\",\n    \"message\": \"You can only modify your own posts\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Health check (post)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{postUrl}}/health",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Shows whether the post service can reach MongoDB and Redis.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{postUrl}}/health",
+                  "host": [
+                    "{{postUrl}}"
+                  ],
+                  "path": [
+                    "health"
+                  ]
+                },
+                "description": "Shows whether the post service can reach MongoDB and Redis.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"service\": \"post\",\n    \"mongo\": \"up\",\n    \"redis\": \"up\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Error & security scenarios",
+      "description": "Shows what the API returns when something is wrong. Each request checks the expected status code.",
+      "item": [
+        {
+          "name": "Setup: signup second user (Bob)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{authUrl}}/api/auth/signup",
+              "host": [
+                "{{authUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "signup"
+              ]
+            },
+            "description": "Creates a second user so we can check that Bob cannot change Jane's posts. Saves `bobToken`.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bob\",\n  \"email\": \"{{bobEmail}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('bobEmail', `bob.${Date.now()}@example.com`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('bobToken', pm.response.json().data.accessToken);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Setup: Jane creates a post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{postUrl}}/api/posts",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ]
+            },
+            "description": "Jane (the `token` user) creates a post for the next tests.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Jane's post\",\n  \"content\": \"Only Jane may edit this.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('postId', pm.response.json().data.post.id);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Bob tries to update Jane's post \u2192 403",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{postUrl}}/api/posts/{{postId}}",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}"
+              ]
+            },
+            "description": "Changing the id in the URL does not help: the owner is checked against the token.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bobToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Hacked by Bob\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Error code is FORBIDDEN', () => pm.expect(pm.response.json().error.code).to.eql('FORBIDDEN'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Bob tries to delete Jane's post \u2192 403",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{postUrl}}/api/posts/{{postId}}",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}"
+              ]
+            },
+            "description": "Same ownership check as update.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bobToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Error code is FORBIDDEN', () => pm.expect(pm.response.json().error.code).to.eql('FORBIDDEN'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Signup with same email \u2192 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{authUrl}}/api/auth/signup",
+              "host": [
+                "{{authUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "signup"
+              ]
+            },
+            "description": "Email must be unique.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Again\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Error code is CONFLICT', () => pm.expect(pm.response.json().error.code).to.eql('CONFLICT'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Signup with invalid data \u2192 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{authUrl}}/api/auth/signup",
+              "host": [
+                "{{authUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "signup"
+              ]
+            },
+            "description": "Every invalid field is listed in `error.details`.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"J\",\n  \"email\": \"not-an-email\",\n  \"password\": \"abc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Error code is BAD_REQUEST', () => pm.expect(pm.response.json().error.code).to.eql('BAD_REQUEST'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Invalid JSON body \u2192 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{authUrl}}/api/auth/signup",
+              "host": [
+                "{{authUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "signup"
+              ]
+            },
+            "description": "The body is broken JSON (missing closing brace).",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Jane\",",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Error code is INVALID_JSON', () => pm.expect(pm.response.json().error.code).to.eql('INVALID_JSON'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Login with wrong password \u2192 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{authUrl}}/api/auth/login",
+              "host": [
+                "{{authUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Same answer for a wrong password and an unknown email, so attackers can't tell which emails exist.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"wrongpass1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Error code is INVALID_CREDENTIALS', () => pm.expect(pm.response.json().error.code).to.eql('INVALID_CREDENTIALS'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Create post without token \u2192 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{postUrl}}/api/posts",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ]
+            },
+            "description": "No Authorization header.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"No token\",\n  \"content\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Error code is TOKEN_MISSING', () => pm.expect(pm.response.json().error.code).to.eql('TOKEN_MISSING'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Create post with invalid token \u2192 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{postUrl}}/api/posts",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ]
+            },
+            "description": "A made-up token string.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{invalidToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Bad token\",\n  \"content\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Error code is TOKEN_INVALID', () => pm.expect(pm.response.json().error.code).to.eql('TOKEN_INVALID'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Create post with expired token \u2192 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{postUrl}}/api/posts",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ]
+            },
+            "description": "Needs the `jwtSecret` collection variable (see the pre-request script).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{expiredToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Old token\",\n  \"content\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Makes a token that expired 1 minute ago, signed with your real secret.",
+                  "// Set the collection variable `jwtSecret` to JWT_SECRET from your .env first,",
+                  "// otherwise the API answers TOKEN_INVALID instead of TOKEN_EXPIRED.",
+                  "const b64url = (words) => CryptoJS.enc.Base64.stringify(words).replace(/=+$/, '').replace(/\\+/g, '-').replace(/\\//g, '_');",
+                  "const encode = (obj) => b64url(CryptoJS.enc.Utf8.parse(JSON.stringify(obj)));",
+                  "const now = Math.floor(Date.now() / 1000);",
+                  "const header = encode({ alg: 'HS256', typ: 'JWT' });",
+                  "const payload = encode({ sub: pm.collectionVariables.get('userId'), jti: 'expired-demo', iat: now - 3600, exp: now - 60, iss: 'blog-auth-service', aud: 'blog-api' });",
+                  "const signature = b64url(CryptoJS.HmacSHA256(`${header}.${payload}`, pm.variables.get('jwtSecret')));",
+                  "pm.collectionVariables.set('expiredToken', `${header}.${payload}.${signature}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Error code is TOKEN_EXPIRED', () => pm.expect(pm.response.json().error.code).to.eql('TOKEN_EXPIRED'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Create post with missing fields \u2192 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{postUrl}}/api/posts",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ]
+            },
+            "description": "`title` and `content` are required.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Error code is BAD_REQUEST', () => pm.expect(pm.response.json().error.code).to.eql('BAD_REQUEST'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Update with empty body \u2192 400",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{postUrl}}/api/posts/{{postId}}",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}"
+              ]
+            },
+            "description": "Send at least one of `title`, `content`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Error code is BAD_REQUEST', () => pm.expect(pm.response.json().error.code).to.eql('BAD_REQUEST'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Get post with invalid id \u2192 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{postUrl}}/api/posts/not-an-id",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "not-an-id"
+              ]
+            },
+            "description": "Ids must be 24 hex characters.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Error code is INVALID_ID', () => pm.expect(pm.response.json().error.code).to.eql('INVALID_ID'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Get nonexistent post \u2192 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{postUrl}}/api/posts/64b0c0ffee0000000000beef",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "64b0c0ffee0000000000beef"
+              ]
+            },
+            "description": "Valid id, but no such post.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Error code is NOT_FOUND', () => pm.expect(pm.response.json().error.code).to.eql('NOT_FOUND'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Unknown route \u2192 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{postUrl}}/api/nothing-here",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "nothing-here"
+              ]
+            },
+            "description": "Any URL that doesn't exist.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Error code is NOT_FOUND', () => pm.expect(pm.response.json().error.code).to.eql('NOT_FOUND'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Cleanup: Jane deletes her post",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{postUrl}}/api/posts/{{postId}}",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}"
+              ]
+            },
+            "description": "Removes the test post."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Logout",
+      "description": "Run last: logging out revokes the token used by the other folders.",
+      "item": [
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{authUrl}}/api/auth/logout",
+              "host": [
+                "{{authUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Revokes the current token (stored in Redis until it would expire). The token then stops working in **both** services. Log in again to get a new one."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{authUrl}}/api/auth/logout",
+                  "host": [
+                    "{{authUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "logout"
+                  ]
+                },
+                "description": "Revokes the current token (stored in Redis until it would expire). The token then stops working in **both** services. Log in again to get a new one."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Logged out successfully\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Use token after logout \u2192 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{postUrl}}/api/posts",
+              "host": [
+                "{{postUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ]
+            },
+            "description": "The revoked token is rejected by the post service too.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"After logout\",\n  \"content\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Error code is TOKEN_REVOKED', () => pm.expect(pm.response.json().error.code).to.eql('TOKEN_REVOKED'));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "401 Revoked",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{postUrl}}/api/posts",
+                  "host": [
+                    "{{postUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "posts"
+                  ]
+                },
+                "description": "The revoked token is rejected by the post service too.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"After logout\",\n  \"content\": \"x\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"TOKEN_REVOKED\",\n    \"message\": \"Access token has been revoked\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
